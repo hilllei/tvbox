@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hello</title>
+<style>
+  :root{
+    --bg:#f6f7fb; --card:#ffffff; --text:#1f2430; --muted:#7a8194;
+    --line:#e8eaf0; --accent:#4f7cff;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+    background:linear-gradient(180deg,#eef1f8 0%,#f6f7fb 100%);
+    color:var(--text);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;
+  }
+  .card{
+    background:var(--card);border:1px solid var(--line);border-radius:18px;
+    max-width:560px;width:100%;padding:40px 36px;box-shadow:0 12px 40px rgba(31,36,48,.08);
+  }
+  .badge{display:inline-block;font-size:12px;color:var(--accent);background:#eef2ff;
+    padding:4px 10px;border-radius:999px;margin-bottom:18px;letter-spacing:.5px}
+  h1{font-size:26px;font-weight:700;margin-bottom:6px}
+  .sub{color:var(--muted);font-size:14px;margin-bottom:22px}
+  p.desc{line-height:1.8;color:#4a5160;font-size:15px;margin-bottom:24px}
+  .poem{border-top:1px solid var(--line);padding-top:24px;line-height:2.2;color:#4a5160;font-size:15px;letter-spacing:.5px}
+  .poem em{display:block;margin-top:14px;text-align:right;font-style:normal;color:var(--muted);font-size:12px}
+
+  /* 纯静态落地页特有：源地址区 */
+  .source{margin-top:26px;border:1px dashed var(--accent);border-radius:14px;padding:18px;background:#fafbff}
+  .source-label{font-size:13px;color:var(--accent);font-weight:600;margin-bottom:10px}
+  .source-row{display:flex;gap:8px}
+  .source-row input{
+    flex:1;min-width:0;padding:10px 12px;border:1px solid var(--line);border-radius:10px;
+    font-size:13px;color:var(--text);background:#fff;font-family:ui-monospace,SFMono-Regular,Menlo,monospace
+  }
+  .source-row button{
+    flex:none;padding:0 18px;border:none;border-radius:10px;background:var(--accent);color:#fff;
+    font-size:14px;cursor:pointer;transition:opacity .15s
+  }
+  .source-row button:hover{opacity:.88}
+  .source-tip{margin-top:10px;font-size:12px;color:var(--muted);line-height:1.6}
+
+  footer{margin-top:26px;font-size:12px;color:var(--muted);text-align:center}
+  .stat{margin-top:8px;font-size:11px;color:var(--muted);text-align:center;letter-spacing:.3px}
+</style>
+</head>
+<body>
+  <main class="card">
+    <span class="badge">Hello</span>
+    <h1>山有木兮木有枝</h1>
+    <div class="sub">Mountains bear trees; my heart bears you — unknown.</div>
+    <div class="poem">
+      今夕何夕兮，搴舟中流。<br>
+      今日何日兮，得与王子同舟。<br>
+      蒙羞被好兮，不訾诟耻。<br>
+      心几烦而不绝兮，得知王子。<br>
+      山有木兮木有枝，心悦君兮君不知。
+      <em>—— 先秦《越人歌》· 载于 西汉·刘向《说苑·善说》</em>
+    </div>
+
+    <footer>© <span id="year"></span> Hello. All rights reserved.</footer>
+    <div class="stat" id="stat">浏览器：—</div>
+  </main>
+
+
+</body>
+</html>
