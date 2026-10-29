@@ -1,4 +1,4 @@
-name: 上游有更新才同步+复制jsm.json为hi.json并修改豆瓣名称
+name: 上游更新同步+复制jsm.json为hi.json并修改豆瓣名称
 on:
   schedule:
     - cron: '0 0 * * *'   # UTC 0点 = 北京时间 08:00，每24h一次
@@ -19,12 +19,12 @@ jobs:
         id: fork_sync
         uses: aormsby/Fork-Sync-With-Upstream-action@v3.4
         with:
-          upstream_repository: qist/tvbox
-          upstream_branch: master
-          target_branch: master
-          git_user_name: github-actions[bot]
-          git_user_email: github-actions[bot]@users.noreply.github.com
-          force_sync: false
+          upstream_sync_repo: qist/tvbox
+          upstream_sync_branch: master
+          target_sync_branch: master
+          git_config_user: github-actions[bot]
+          git_config_email: github-actions[bot]@users.noreply.github.com
+          test_mode: false
           output_sync_result: true
 
       - name: 上游无新提交，直接退出
