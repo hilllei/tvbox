@@ -1,4 +1,4 @@
-name: 上游更新同步+复制jsm.json为hi.json并修改豆瓣名称
+name: 同步+复制+修改
 on:
   schedule:
     - cron: '0 0 * * *'   # UTC 0点 = 北京时间 08:00，每24h一次
@@ -33,16 +33,15 @@ jobs:
           echo "上游无新提交，跳过本次全部操作"
           exit 0
 
-      - name: 复制 jsm.json → hi.json，修改 drpy_js_豆瓣 的 name
+      - name: 复制 jsm.json → hi.json，替换文本「搜索 • 豆瓣」为 Hello~
         run: |
           SRC_FILE="jsm.json"
           DST_FILE="hi.json"
           if [ -f "$SRC_FILE" ]; then
             cp "$SRC_FILE" "$DST_FILE"
             echo "✅ 已复制：$SRC_FILE -> $DST_FILE"
-            # jq 找到 key=="drpy_js_豆瓣" 的节点，修改 name
-            jq '(.[] | select(.key == "drpy_js_豆瓣")).name = "Hello~"' "$DST_FILE" > tmp.json && mv tmp.json "$DST_FILE"
-            echo "✅ 修改完成：name 改为 Hello~"
+            sed -i 's|"搜索 • 豆瓣"|"Hello~"|g' "$DST_FILE"
+            echo "✅ 字符串替换完成"
           else
             echo "⚠️ 源文件 jsm.json 不存在，跳过"
           fi
