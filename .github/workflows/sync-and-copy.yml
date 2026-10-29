@@ -54,6 +54,6 @@ jobs:
           if git diff --quiet --cached; then
             echo "ℹ️ 文件没有改动，无需提交"
           else
-            git commit -m "auto: 更新，复制并修改"
+            git commit -m "auto: 同步+复制+修改"
             git push
           fi
