@@ -54,6 +54,6 @@ jobs:
           if git diff --quiet --cached; then
             echo "ℹ️ 文件没有改动，无需提交"
           else
-            git commit -m "auto: 上游更新，复制jsm.json为hi.json并修改豆瓣名称"
+            git commit -m "auto: 更新，复制并修改"
             git push
           fi
