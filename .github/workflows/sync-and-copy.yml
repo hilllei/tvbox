@@ -1,0 +1,60 @@
+name: 上游有更新才同步+复制jsm.json为hi.json并修改豆瓣名称
+on:
+  schedule:
+    - cron: '0 0 * * *'   # UTC 0点 = 北京时间 08:00，每24h一次
+    # 想要北京时间0点执行，替换成：cron: '0 16 * * *'
+  workflow_dispatch:
+
+jobs:
+  sync_and_copy_and_edit_json:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 检出fork仓库代码
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.SYNC_TOKEN }}
+
+      - name: 同步上游仓库
+        id: fork_sync
+        uses: aormsby/Fork-Sync-With-Upstream-action@v3.4
+        with:
+          upstream_repository: qist/tvbox
+          upstream_branch: master
+          target_branch: master
+          git_user_name: github-actions[bot]
+          git_user_email: github-actions[bot]@users.noreply.github.com
+          force_sync: false
+          output_sync_result: true
+
+      - name: 上游无新提交，直接退出
+        if: ${{ steps.fork_sync.outputs.has_new_commits != 'true' }}
+        run: |
+          echo "上游无新提交，跳过本次全部操作"
+          exit 0
+
+      - name: 复制 jsm.json → hi.json，修改 drpy_js_豆瓣 的 name
+        run: |
+          SRC_FILE="jsm.json"
+          DST_FILE="hi.json"
+          if [ -f "$SRC_FILE" ]; then
+            cp "$SRC_FILE" "$DST_FILE"
+            echo "✅ 已复制：$SRC_FILE -> $DST_FILE"
+            # jq 找到 key=="drpy_js_豆瓣" 的节点，修改 name
+            jq '(.[] | select(.key == "drpy_js_豆瓣")).name = "Hello~"' "$DST_FILE" > tmp.json && mv tmp.json "$DST_FILE"
+            echo "✅ 修改完成：name 改为 Hello~"
+          else
+            echo "⚠️ 源文件 jsm.json 不存在，跳过"
+          fi
+
+      - name: 提交推送
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add .
+          if git diff --quiet --cached; then
+            echo "ℹ️ 文件没有改动，无需提交"
+          else
+            git commit -m "auto: 上游更新，复制jsm.json为hi.json并修改豆瓣名称"
+            git push
+          fi
