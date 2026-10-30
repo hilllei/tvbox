@@ -14,7 +14,7 @@
 // ===================== 配置区（按需修改） =====================
 const SITE_TITLE   = 'Find TV';
 const SITE_SUB     = '山有木兮木有枝';
-const SITE_TAGLINE = 'Mountains bear trees; my heart bears you — unknown.';
+const SITE_TAGLINE = 'Mountains bear trees; my heart bears you .';
 const SHOW_STAT    = true;
 
 // 真实源：同仓库的 ok.json（用当前请求域名自动拼绝对地址，跟随部署环境）
