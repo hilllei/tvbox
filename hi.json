@@ -1,5 +1,5 @@
 {
-  "spider": "./jar/spider.jar;md5;a4638e7ba814dd552472501335ecdc47",
+  "spider": "./jar/spider.jar;md5;4e4e7408ede9d8c782ba7a3e7fae32ae",
   "lives": [
     {"name": "migu","type": 0,"url": "https://develop202.github.io/migu_video/interface.txt","playerType": 1,"ua": "okhttp/3.8.1","timeout": 20,"epg": "https://epg.cdn.loc.cc/?ch={name}&date={date}","logo": "https://logo.wyfc.qzz.io/{name}.png"},
     {"name": "live","type": 0,"url": "https://epg.pw/test_channels.m3u","playerType": 1,"ua": "okhttp/3.8.1","timeout": 20,"epg": "https://epg.cdn.loc.cc/?ch={name}&date={date}","logo": "https://logo.wyfc.qzz.io/{name}.png"},
@@ -65,6 +65,7 @@
     {"key": "好看短剧","name": "好看 • 短剧","type": 3,"api": "csp_ShortHaokan","genre": "shortdrama"},
     {"key": "星芽短剧","name": "星芽 • 短剧","type": 3,"api": "csp_ShortXingya","genre": "shortdrama"},
     {"key": "果果短剧","name": "果果 • 短剧","type": 3,"api": "csp_XBPQ","ext": {"请求头": "User-Agent$MOBILE_UA","编码": "UTF-8","分类": "重生$1#穿越$2#爽剧$3#言情$4#都市$5#古装$6#悬疑$7#剧情$8","分类url": "https://www.mochadj.com/i/{cateId}-{catePg}.html"},"genre": "shortdrama"},
+    {"key": "巨量","name": "巨量 • 影视","type": 1,"api": "https://api.juliang.live/api/provide/vod"},
     {"key": "飞娱影视","name": "飞娱 • 影视","type": 3,"api": "csp_Feiyu"},
     {"key": "旺旺影视","name": "旺旺 • 影视","type": 3,"api": "csp_Wwys","ext": "https://vip.wwgz.cn:5200"},
     {"key": "独播影视","name": "独播 • 影视","type": 3,"api": "csp_Duboku"},
@@ -84,6 +85,7 @@
     {"key": "New6v","name": "New6V • 磁力","type": 3,"api": "csp_New6v","searchable": 1,"quickSearch": 1,"filterable": 1,"ext": "https://www.xb6v.com"},
     {"key": "美剧迷","name": "美剧迷 • 磁力","type": 3,"api": "csp_MeijuMi","searchable": 1,"quickSearch": 1,"filterable": 1},
     {"key": "迅雷吧","name": "迅雷吧 • 磁力","type": 3,"api": "csp_Xunlei8","searchable": 1,"quickSearch": 1,"filterable": 1,"ext": "https://xunlei8.me"},
+    {"key": "电影港","name": "电影港 • 磁力","type": 3,"api": "csp_DianYingG","searchable": 1,"quickSearch": 1,"filterable": 1},
     {"key": "阿里云盘","name": "阿里 • 云盘","type": 3,"api": "csp_PanAli","searchable": 0,"filterable": 0,"changeable": 0,"style": {"type": "list","ratio": 1.433}},
     {"key": "夸克网盘","name": "夸克 • 网盘","type": 3,"api": "csp_PanQuark","searchable": 0,"filterable": 0,"changeable": 0,"style": {"type": "list","ratio": 1.433}},
     {"key": "UC网盘","name": "UC • 网盘","type": 3,"api": "csp_PanUC","searchable": 0,"filterable": 0,"changeable": 0,"style": {"type": "list","ratio": 1.433}},
