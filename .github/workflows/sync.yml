@@ -1,0 +1,60 @@
+name: 同步+复制+修改
+on:
+  schedule:
+    - cron: '0 0 * * *'
+  workflow_dispatch:
+jobs:
+  auto_sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 检出仓库代码
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.SYNC_TOKEN }}
+
+      # 同步上游：用「checkout 覆盖」而非 merge，从根上避免合并冲突；
+      # 同时显式备份/恢复自己维护的 .github/ 与 functions/，防止被上游覆盖或删除
+      - name: 同步上游官方仓库（保留自身文件，杜绝冲突与误删）
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git remote add upstream https://github.com/qist/tvbox.git || git remote set-url upstream https://github.com/qist/tvbox.git
+          git fetch upstream master
+
+          # ① 备份自己维护、上游没有的目录（防止上游万一也有同名目录被覆盖）
+          rm -rf /tmp/self_keep
+          mkdir -p /tmp/self_keep
+          [ -d .github ]     && cp -r .github     /tmp/self_keep/.github
+          [ -d functions ]   && cp -r functions   /tmp/self_keep/functions
+
+          # ② 用上游内容覆盖工作区（checkout 覆盖、不走 merge，绝无冲突；
+          #    二进制 .jar 直接采用上游版本，也安全）。上游没有的 .github/ functions/ 不受影响
+          git checkout upstream/master -- .
+
+          # ③ 恢复自己维护的目录（若上游动过同名目录则强制用本地版本，确保自身文件不丢）
+          [ -d /tmp/self_keep/.github ]   && rm -rf .github   && cp -r /tmp/self_keep/.github   .
+          [ -d /tmp/self_keep/functions ] && rm -rf functions && cp -r /tmp/self_keep/functions .
+
+          # ④ 删除"上游已删、本地残留"的源文件（仅清理 TVBox 源，绝不碰 .github/functions）
+          git diff --name-only upstream/master HEAD | while IFS= read -r f; do
+            case "$f" in
+              .github/*|functions/*|"") : ;;
+              *) rm -f "$f" ;;
+            esac
+          done
+
+      - name: 复制 jsm.json 为 hi.json 并替换内容
+        run: |
+          cp jsm.json hi.json
+          sed -i 's|"搜索 • 豆瓣"|"Hello~"|g' hi.json
+
+      - name: 提交并推送变更
+        run: |
+          git add -A
+          if git diff --cached --quiet; then
+            echo "无变更无需提交"
+          else
+            git commit -m "auto: 同步+复制+修改"
+            git push
+          fi
