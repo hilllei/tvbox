@@ -14,45 +14,32 @@ jobs:
           fetch-depth: 0
           token: ${{ secrets.SYNC_TOKEN }}
 
-      # 同步上游：用「checkout 覆盖」而非 merge，从根上避免合并冲突；
-      # 显式备份/恢复自己维护的 .github/ 与 functions/，防止被上游覆盖或删除。
-      # 注意：不做任何「清理差异文件」的操作 —— 那一步会把 jsm.json 误删，导致后续 cp 失败。
-      - name: 同步上游官方仓库（保留自身文件，杜绝冲突与误删）
+      # 同步上游：用 git merge 合入上游提交（而非 checkout 覆盖），
+      # 这样上游文件各自保留其原始提交说明；仅我们自己复制出来的 hi.json
+      # 才使用下面的「auto: 同步+复制+修改」提交说明。
+      # 本仓库从未手工改过上游文件，merge 不会冲突（上游文件内容一致）。
+      - name: 合并上游官方仓库（保留上游提交信息）
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git remote add upstream https://github.com/qist/tvbox.git || git remote set-url upstream https://github.com/qist/tvbox.git
           git fetch upstream master
+          # 合入上游提交；上游文件的改动会保留各自原始 message
+          git merge upstream/master --no-edit
 
-          # ① 备份自己维护、上游没有的目录（防止被上游覆盖或删除）
-          rm -rf /tmp/self_keep
-          mkdir -p /tmp/self_keep
-          [ -d .github ]     && cp -r .github     /tmp/self_keep/.github
-          [ -d functions ]   && cp -r functions   /tmp/self_keep/functions
-
-          # ② 用上游内容覆盖工作区（checkout 覆盖、不走 merge，绝无冲突；
-          #    上游真实存在 jsm.json，此步即把它拉进工作区）
-          git checkout upstream/master -- .
-
-          # ③ 恢复自己维护的目录（确保自身文件不丢）
-          [ -d /tmp/self_keep/.github ]   && rm -rf .github   && cp -r /tmp/self_keep/.github   .
-          [ -d /tmp/self_keep/functions ] && rm -rf functions && cp -r /tmp/self_keep/functions .
-
-      - name: 复制 jsm.json 为 hi.json（含兜底下载）
+      - name: 生成 hi.json（仅此文件用我们的提交说明）
         run: |
-          # 兜底：万一 checkout 没取到 jsm.json，直接从上游 raw 下载，避免 cp 失败
+          # 兜底：若上游未提供 jsm.json，直接从 raw 下载，避免 cp 失败
           if [ ! -f jsm.json ]; then
-            echo "checkout 未取到 jsm.json，改从上游 raw 直接下载兜底"
+            echo "未取到 jsm.json，改从上游 raw 直接下载兜底"
             curl -fsSL https://raw.githubusercontent.com/qist/tvbox/master/jsm.json -o jsm.json
           fi
           cp jsm.json hi.json
           sed -i 's|"搜索 • 豆瓣"|"Hello~"|g' hi.json
-
-      - name: 提交并推送变更
-        run: |
-          git add -A
+          # 只提交 hi.json，绝不碰其它上游文件的历史说明
+          git add hi.json
           if git diff --cached --quiet; then
-            echo "无变更无需提交"
+            echo "hi.json 无变更无需提交"
           else
             git commit -m "auto: 同步+复制+修改"
             git push
