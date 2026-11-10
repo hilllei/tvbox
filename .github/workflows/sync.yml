@@ -17,27 +17,33 @@ jobs:
       # 同步上游：用 git merge 合入上游提交（而非 checkout 覆盖），
       # 这样上游文件各自保留其原始提交说明；仅我们自己复制出来的 hi.json
       # 才使用下面的「auto: 同步+复制+修改」提交说明。
-      # 本仓库从未手工改过上游文件，merge 不会冲突（上游文件内容一致）。
+      # 若上游文件与本地冲突（例如 jsm.json 被误删），统一以「上游版本」解决，确保不丢失。
       - name: 合并上游官方仓库（保留上游提交信息）
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git remote add upstream https://github.com/qist/tvbox.git || git remote set-url upstream https://github.com/qist/tvbox.git
           git fetch upstream master
-          # 合入上游提交；上游文件的改动会保留各自原始 message
-          git merge upstream/master --no-edit
+          # 合入上游提交；冲突时统一以「上游版本」为准并收尾
+          git merge upstream/master --no-edit || true
+          if git diff --name-only --diff-filter=U | grep -q .; then
+            git checkout --theirs -- $(git diff --name-only --diff-filter=U)
+            git add -A
+            git commit --no-edit
+          fi
 
       - name: 生成 hi.json（仅此文件用我们的提交说明）
         run: |
-          # 兜底：若上游未提供 jsm.json，直接从 raw 下载，避免 cp 失败
+          # 兜底：若 jsm.json 缺失（被误删或上游未带），先从上游 ref 恢复，再不行用 raw 下载
           if [ ! -f jsm.json ]; then
-            echo "未取到 jsm.json，改从上游 raw 直接下载兜底"
-            curl -fsSL https://raw.githubusercontent.com/qist/tvbox/master/jsm.json -o jsm.json
+            echo "jsm.json 缺失，尝试从上游 ref 恢复"
+            git checkout upstream/master -- jsm.json 2>/dev/null \
+              || curl -fsSL https://raw.githubusercontent.com/qist/tvbox/master/jsm.json -o jsm.json
           fi
           cp jsm.json hi.json
           sed -i 's|"搜索 • 豆瓣"|"Hello~"|g' hi.json
-          # 只提交 hi.json，绝不碰其它上游文件的历史说明
-          git add hi.json
+          # 只提交 hi.json（及必要时恢复的 jsm.json），其它上游文件保留上游说明
+          git add hi.json jsm.json
           if git diff --cached --quiet; then
             echo "hi.json 无变更无需提交"
           else
