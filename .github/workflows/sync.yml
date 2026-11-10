@@ -14,27 +14,28 @@ jobs:
           fetch-depth: 0
           token: ${{ secrets.SYNC_TOKEN }}
 
-      # 同步上游：用 git merge 合入上游提交（而非 checkout 覆盖），
-      # 这样上游文件各自保留其原始提交说明；仅我们自己复制出来的 hi.json
-      # 才使用下面的「auto: 同步+复制+修改」提交说明。
-      # 若上游文件与本地冲突（例如 jsm.json 被误删），统一以「上游版本」解决，确保不丢失。
-      - name: 合并上游官方仓库（保留上游提交信息）
+      # 同步上游：用 git merge 合入上游提交，使上游文件各自保留其原始提交说明。
+      # 冲突时统一以「上游版本」解决；再用 checkout 做全量镜像，确保被删的上游文件也恢复。
+      - name: 合并上游官方仓库（全量镜像 + 保留上游提交信息）
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git remote add upstream https://github.com/qist/tvbox.git || git remote set-url upstream https://github.com/qist/tvbox.git
           git fetch upstream master
-          # 合入上游提交；冲突时统一以「上游版本」为准并收尾
+          # ① 合入上游提交；冲突时以「上游版本」为准并收尾
           git merge upstream/master --no-edit || true
           if git diff --name-only --diff-filter=U | grep -q .; then
             git checkout --theirs -- $(git diff --name-only --diff-filter=U)
             git add -A
             git commit --no-edit
           fi
+          # ② 全量镜像：强制所有上游文件与上游一致（被删的上游文件在此恢复；
+          #    其说明会暂为 auto，待上游更新后自动切回上游说明）
+          git checkout upstream/master -- .
 
-      - name: 生成 hi.json（仅此文件用我们的提交说明）
+      - name: 生成 hi.json 并推送
         run: |
-          # 兜底：若 jsm.json 缺失（被误删或上游未带），先从上游 ref 恢复，再不行用 raw 下载
+          # 兜底：若 jsm.json 仍缺失，先从上游 ref 恢复，再不行用 raw 下载
           if [ ! -f jsm.json ]; then
             echo "jsm.json 缺失，尝试从上游 ref 恢复"
             git checkout upstream/master -- jsm.json 2>/dev/null \
@@ -42,11 +43,10 @@ jobs:
           fi
           cp jsm.json hi.json
           sed -i 's|"搜索 • 豆瓣"|"Hello~"|g' hi.json
-          # 只提交 hi.json（及必要时恢复的 jsm.json），其它上游文件保留上游说明
+          # 提交 hi.json（及必要时恢复的 jsm.json、被全量镜像恢复的上游文件）
           git add hi.json jsm.json
-          if git diff --cached --quiet; then
-            echo "hi.json 无变更无需提交"
-          else
+          if ! git diff --cached --quiet; then
             git commit -m "auto: 同步+复制+修改"
-            git push
           fi
+          # 只要本地比远端新（含上游 merge）就推送，避免漏推
+          git push origin HEAD
