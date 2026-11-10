@@ -15,7 +15,8 @@ jobs:
           token: ${{ secrets.SYNC_TOKEN }}
 
       # 同步上游：用「checkout 覆盖」而非 merge，从根上避免合并冲突；
-      # 同时显式备份/恢复自己维护的 .github/ 与 functions/，防止被上游覆盖或删除
+      # 显式备份/恢复自己维护的 .github/ 与 functions/，防止被上游覆盖或删除。
+      # 注意：不做任何「清理差异文件」的操作 —— 那一步会把 jsm.json 误删，导致后续 cp 失败。
       - name: 同步上游官方仓库（保留自身文件，杜绝冲突与误删）
         run: |
           git config user.name "github-actions[bot]"
@@ -23,30 +24,27 @@ jobs:
           git remote add upstream https://github.com/qist/tvbox.git || git remote set-url upstream https://github.com/qist/tvbox.git
           git fetch upstream master
 
-          # ① 备份自己维护、上游没有的目录（防止上游万一也有同名目录被覆盖）
+          # ① 备份自己维护、上游没有的目录（防止被上游覆盖或删除）
           rm -rf /tmp/self_keep
           mkdir -p /tmp/self_keep
           [ -d .github ]     && cp -r .github     /tmp/self_keep/.github
           [ -d functions ]   && cp -r functions   /tmp/self_keep/functions
 
           # ② 用上游内容覆盖工作区（checkout 覆盖、不走 merge，绝无冲突；
-          #    二进制 .jar 直接采用上游版本，也安全）。上游没有的 .github/ functions/ 不受影响
+          #    上游真实存在 jsm.json，此步即把它拉进工作区）
           git checkout upstream/master -- .
 
-          # ③ 恢复自己维护的目录（若上游动过同名目录则强制用本地版本，确保自身文件不丢）
+          # ③ 恢复自己维护的目录（确保自身文件不丢）
           [ -d /tmp/self_keep/.github ]   && rm -rf .github   && cp -r /tmp/self_keep/.github   .
           [ -d /tmp/self_keep/functions ] && rm -rf functions && cp -r /tmp/self_keep/functions .
 
-          # ④ 删除"上游已删、本地残留"的源文件（仅清理 TVBox 源，绝不碰 .github/functions）
-          git diff --name-only upstream/master HEAD | while IFS= read -r f; do
-            case "$f" in
-              .github/*|functions/*|"") : ;;
-              *) rm -f "$f" ;;
-            esac
-          done
-
-      - name: 复制 jsm.json 为 hi.json 并替换内容
+      - name: 复制 jsm.json 为 hi.json（含兜底下载）
         run: |
+          # 兜底：万一 checkout 没取到 jsm.json，直接从上游 raw 下载，避免 cp 失败
+          if [ ! -f jsm.json ]; then
+            echo "checkout 未取到 jsm.json，改从上游 raw 直接下载兜底"
+            curl -fsSL https://raw.githubusercontent.com/qist/tvbox/master/jsm.json -o jsm.json
+          fi
           cp jsm.json hi.json
           sed -i 's|"搜索 • 豆瓣"|"Hello~"|g' hi.json
 
